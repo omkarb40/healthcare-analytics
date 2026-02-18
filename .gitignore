@@ -29,6 +29,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+*.pyc
 
 # IDE & Editor
 .vscode/
@@ -64,3 +65,15 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment secrets
+.env
