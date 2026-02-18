@@ -23,6 +23,7 @@ import time
 import copy
 import logging
 import argparse
+import os
 from datetime import datetime, timedelta
 from kafka import KafkaProducer
 
@@ -43,7 +44,7 @@ DEFAULT_CONFIG = {
     "eventhub": {
         "namespace": "healthcare-analytics-namespace.servicebus.windows.net",
         "hub_name": "healthcare-analytics-eh",
-        "connection_string": "${EVENTHUB_CONNECTION_STRING}"
+        "connection_string": os.environ.get("EVENTHUB_CONNECTION_STRING", "")
     },
 
     "hospitals": {
@@ -146,6 +147,18 @@ class PatientFlowSimulator:
     def _create_producer(self) -> KafkaProducer:
         """Create Kafka producer connected to Azure Event Hubs."""
         eh = self.config["eventhub"]
+        conn_str = eh["connection_string"]
+
+        # Validate connection string before attempting connection
+        if not conn_str or conn_str.startswith("<<") or "SharedAccessKey" not in conn_str:
+            raise ValueError(
+                "\n\n  ERROR: Missing or invalid Event Hub connection string!\n"
+                "  Set it via environment variable:\n"
+                "    export EVENTHUB_CONNECTION_STRING='Endpoint=sb://...'\n"
+                "  Or pass via CLI:\n"
+                "    python patient_flow_simulator.py --connection-string 'Endpoint=sb://...'\n"
+            )
+
         return KafkaProducer(
             bootstrap_servers=[f"{eh['namespace']}:9093"],
             security_protocol="SASL_SSL",
