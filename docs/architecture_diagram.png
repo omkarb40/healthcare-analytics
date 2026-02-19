@@ -1,0 +1,198 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 650" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-opacity="0.12"/>
+    </filter>
+    <linearGradient id="bronzeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#CD7F32"/>
+      <stop offset="100%" stop-color="#8B5A2B"/>
+    </linearGradient>
+    <linearGradient id="silverGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#C0C0C0"/>
+      <stop offset="100%" stop-color="#808080"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#DAA520"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0078D4"/>
+      <stop offset="100%" stop-color="#005A9E"/>
+    </linearGradient>
+    <linearGradient id="dbricksGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF3621"/>
+      <stop offset="100%" stop-color="#CC2B1A"/>
+    </linearGradient>
+    <linearGradient id="adfGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0078D4"/>
+      <stop offset="100%" stop-color="#004E8C"/>
+    </linearGradient>
+    <linearGradient id="synapseGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0078D4"/>
+      <stop offset="100%" stop-color="#005496"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="650" fill="#FAFAFA"/>
+
+  <!-- Title -->
+  <text x="700" y="40" text-anchor="middle" font-size="24" font-weight="700" fill="#1a1a2e">Real-Time Healthcare Data Platform — Architecture</text>
+  <text x="700" y="62" text-anchor="middle" font-size="13" fill="#666">Patient Flow & Bed Occupancy Analytics | Midwest Health Alliance (7 Hospitals)</text>
+
+  <!-- ═══ SECURITY CLOUD ═══ -->
+  <ellipse cx="145" cy="140" rx="120" ry="55" fill="white" stroke="#0078D4" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+  <text x="145" y="120" text-anchor="middle" font-size="11" font-weight="600" fill="#0078D4">🔐 Azure Key Vault</text>
+  <text x="145" y="138" text-anchor="middle" font-size="11" font-weight="600" fill="#0078D4">🛡️ Azure AD</text>
+  <text x="145" y="156" text-anchor="middle" font-size="10" fill="#666">Secret Scopes</text>
+  <!-- Dashed line to Data Lake -->
+  <line x1="200" y1="190" x2="560" y2="280" stroke="#0078D4" stroke-width="1" stroke-dasharray="4,4" opacity="0.5"/>
+
+  <!-- ═══ DATA SOURCE ═══ -->
+  <!-- Database icon -->
+  <g transform="translate(60, 320)" filter="url(#shadow)">
+    <rect x="0" y="0" width="90" height="90" rx="12" fill="white" stroke="#374151" stroke-width="1.5"/>
+    <text x="45" y="38" text-anchor="middle" font-size="28">🏥</text>
+    <text x="45" y="60" text-anchor="middle" font-size="10" font-weight="600" fill="#1a1a2e">Patient Flow</text>
+    <text x="45" y="73" text-anchor="middle" font-size="10" font-weight="600" fill="#1a1a2e">Simulator</text>
+    <text x="45" y="86" text-anchor="middle" font-size="8" fill="#888">Python</text>
+  </g>
+  <text x="105" y="435" text-anchor="middle" font-size="12" font-weight="600" fill="#555">Data Source</text>
+
+  <!-- Arrow: Source → Event Hub -->
+  <line x1="155" y1="365" x2="205" y2="365" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#374151"/></marker></defs>
+
+  <!-- ═══ EVENT HUBS ═══ -->
+  <g transform="translate(210, 310)" filter="url(#shadow)">
+    <rect x="0" y="0" width="110" height="110" rx="12" fill="white" stroke="#5B2D8E" stroke-width="1.5"/>
+    <text x="55" y="35" text-anchor="middle" font-size="10" fill="#888">Kafka Protocol</text>
+    <text x="55" y="58" text-anchor="middle" font-size="24">⚡</text>
+    <text x="55" y="80" text-anchor="middle" font-size="11" font-weight="600" fill="#5B2D8E">Azure</text>
+    <text x="55" y="95" text-anchor="middle" font-size="11" font-weight="600" fill="#5B2D8E">Event Hubs</text>
+  </g>
+  <text x="265" y="445" text-anchor="middle" font-size="12" font-weight="600" fill="#555">Data Streaming</text>
+
+  <!-- Arrow: Event Hub → Data Lake -->
+  <line x1="325" y1="365" x2="390" y2="365" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- ═══ DATA LAKE BOX (Medallion) ═══ -->
+  <rect x="395" y="220" width="610" height="260" rx="16" fill="white" stroke="#0078D4" stroke-width="2" filter="url(#shadow)"/>
+
+  <!-- Databricks label -->
+  <g transform="translate(610, 228)">
+    <rect x="0" y="0" width="180" height="28" rx="6" fill="#FF3621" opacity="0.1"/>
+    <text x="90" y="18" text-anchor="middle" font-size="12" font-weight="700" fill="#FF3621">◆ Azure Databricks</text>
+  </g>
+
+  <!-- ADF Orchestration label -->
+  <rect x="700" y="258" width="160" height="22" rx="4" fill="#0078D4" opacity="0.08"/>
+  <text x="780" y="274" text-anchor="middle" font-size="10" font-weight="600" fill="#0078D4">🔄 ADF Orchestration</text>
+
+  <!-- ADLS Gen2 icon -->
+  <g transform="translate(605, 288)">
+    <rect x="0" y="0" width="100" height="24" rx="4" fill="#0078D4" opacity="0.08"/>
+    <text x="50" y="16" text-anchor="middle" font-size="9" font-weight="600" fill="#0078D4">📦 ADLS Gen2</text>
+  </g>
+
+  <!-- ── Bronze ── -->
+  <g transform="translate(420, 325)">
+    <rect x="0" y="0" width="120" height="120" rx="12" fill="white" stroke="url(#bronzeGrad)" stroke-width="2"/>
+    <circle cx="60" cy="35" r="20" fill="url(#bronzeGrad)" opacity="0.15"/>
+    <text x="60" y="40" text-anchor="middle" font-size="16" font-weight="700" fill="#8B5A2B">B</text>
+    <text x="60" y="68" text-anchor="middle" font-size="12" font-weight="700" fill="#8B5A2B">Bronze</text>
+    <text x="60" y="82" text-anchor="middle" font-size="9" fill="#666">Raw JSON</text>
+    <text x="60" y="95" text-anchor="middle" font-size="9" fill="#666">+ Metadata</text>
+    <text x="60" y="112" text-anchor="middle" font-size="8" fill="#999">Delta Format</text>
+  </g>
+
+  <!-- Arrow: Bronze → Silver -->
+  <line x1="545" y1="385" x2="575" y2="385" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- ── Silver ── -->
+  <g transform="translate(580, 325)">
+    <rect x="0" y="0" width="120" height="120" rx="12" fill="white" stroke="url(#silverGrad)" stroke-width="2"/>
+    <circle cx="60" cy="35" r="20" fill="url(#silverGrad)" opacity="0.15"/>
+    <text x="60" y="40" text-anchor="middle" font-size="16" font-weight="700" fill="#666">S</text>
+    <text x="60" y="68" text-anchor="middle" font-size="12" font-weight="700" fill="#666">Silver</text>
+    <text x="60" y="82" text-anchor="middle" font-size="9" fill="#666">Cleaned</text>
+    <text x="60" y="95" text-anchor="middle" font-size="9" fill="#666">7 DQ Rules</text>
+    <text x="60" y="112" text-anchor="middle" font-size="8" fill="#999">Deduplicated</text>
+  </g>
+
+  <!-- Arrow: Silver → Gold -->
+  <line x1="705" y1="385" x2="735" y2="385" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- ── Gold ── -->
+  <g transform="translate(740, 325)">
+    <rect x="0" y="0" width="120" height="120" rx="12" fill="white" stroke="url(#goldGrad)" stroke-width="2"/>
+    <circle cx="60" cy="35" r="20" fill="url(#goldGrad)" opacity="0.15"/>
+    <text x="60" y="40" text-anchor="middle" font-size="16" font-weight="700" fill="#B8860B">G</text>
+    <text x="60" y="68" text-anchor="middle" font-size="12" font-weight="700" fill="#B8860B">Gold</text>
+    <text x="60" y="82" text-anchor="middle" font-size="9" fill="#666">Star Schema</text>
+    <text x="60" y="95" text-anchor="middle" font-size="9" fill="#666">SCD Type 2</text>
+    <text x="60" y="112" text-anchor="middle" font-size="8" fill="#999">4 Tables</text>
+  </g>
+
+  <!-- Data Lake label -->
+  <text x="700" y="500" text-anchor="middle" font-size="12" font-weight="600" fill="#555">Data Lake (Medallion Architecture)</text>
+
+  <!-- Arrow: Gold → Synapse -->
+  <line x1="1010" y1="385" x2="1060" y2="385" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- ═══ SYNAPSE ═══ -->
+  <g transform="translate(1065, 300)" filter="url(#shadow)">
+    <rect x="0" y="0" width="140" height="140" rx="12" fill="white" stroke="#0078D4" stroke-width="1.5"/>
+    <text x="70" y="35" text-anchor="middle" font-size="28">🔷</text>
+    <text x="70" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#0078D4">Azure Synapse</text>
+    <text x="70" y="78" text-anchor="middle" font-size="10" fill="#666">Serverless SQL</text>
+    <line x1="15" y1="90" x2="125" y2="90" stroke="#E5E7EB" stroke-width="1"/>
+    <text x="70" y="108" text-anchor="middle" font-size="9" fill="#666">External Tables</text>
+    <text x="70" y="122" text-anchor="middle" font-size="9" fill="#666">Deduplicated Views</text>
+    <text x="70" y="136" text-anchor="middle" font-size="9" fill="#666">KPI Queries</text>
+  </g>
+  <text x="1135" y="465" text-anchor="middle" font-size="12" font-weight="600" fill="#555">Data Warehouse</text>
+
+  <!-- Arrow: Synapse → Dashboard -->
+  <line x1="1210" y1="370" x2="1250" y2="370" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <g transform="translate(1255, 310)" filter="url(#shadow)">
+    <rect x="0" y="0" width="110" height="110" rx="12" fill="white" stroke="#16A34A" stroke-width="1.5"/>
+    <text x="55" y="38" text-anchor="middle" font-size="28">📊</text>
+    <text x="55" y="62" text-anchor="middle" font-size="11" font-weight="600" fill="#16A34A">Analytics</text>
+    <text x="55" y="78" text-anchor="middle" font-size="11" font-weight="600" fill="#16A34A">Dashboard</text>
+    <text x="55" y="96" text-anchor="middle" font-size="9" fill="#666">Tableau /</text>
+    <text x="55" y="107" text-anchor="middle" font-size="9" fill="#666">Power BI</text>
+  </g>
+  <text x="1310" y="445" text-anchor="middle" font-size="12" font-weight="600" fill="#555">Analytics</text>
+
+  <!-- ═══ BOTTOM: Gold Table Details ═══ -->
+  <rect x="395" y="530" width="610" height="55" rx="8" fill="#F9FAFB" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="410" y="550" font-size="10" font-weight="600" fill="#374151">Gold Tables:</text>
+  <g transform="translate(500, 537)">
+    <rect x="0" y="0" width="95" height="20" rx="4" fill="#FEF3C7"/>
+    <text x="48" y="14" text-anchor="middle" font-size="9" font-weight="600" fill="#92400E">fact_patient_flow</text>
+  </g>
+  <g transform="translate(605, 537)">
+    <rect x="0" y="0" width="75" height="20" rx="4" fill="#DBEAFE"/>
+    <text x="38" y="14" text-anchor="middle" font-size="9" font-weight="600" fill="#1E40AF">dim_patient</text>
+  </g>
+  <g transform="translate(690, 537)">
+    <rect x="0" y="0" width="90" height="20" rx="4" fill="#DBEAFE"/>
+    <text x="45" y="14" text-anchor="middle" font-size="9" font-weight="600" fill="#1E40AF">dim_department</text>
+  </g>
+  <g transform="translate(790, 537)">
+    <rect x="0" y="0" width="68" height="20" rx="4" fill="#DBEAFE"/>
+    <text x="34" y="14" text-anchor="middle" font-size="9" font-weight="600" fill="#1E40AF">dim_date</text>
+  </g>
+  <text x="410" y="575" font-size="9" fill="#666">SCD Type 2 on dim_patient | 22 columns in fact table | Flattened vitals | Delta Lake format</text>
+
+  <!-- ═══ LEGEND ═══ -->
+  <rect x="1065" y="520" width="140" height="65" rx="6" fill="#F9FAFB" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="1075" y="537" font-size="9" font-weight="600" fill="#374151">Data Flow</text>
+  <line x1="1075" y1="550" x2="1105" y2="550" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1115" y="554" font-size="9" fill="#666">Pipeline</text>
+  <line x1="1075" y1="570" x2="1105" y2="570" stroke="#0078D4" stroke-width="1" stroke-dasharray="4,4"/>
+  <text x="1115" y="574" font-size="9" fill="#666">Secrets</text>
+</svg>

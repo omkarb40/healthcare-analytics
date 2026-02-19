@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Healthcare Analytics — ADF Pipeline & Star Schema</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2236;
+    --border: #2a3550;
+    --text: #e2e8f0;
+    --text-dim: #8892a8;
+    --blue: #3b82f6;
+    --blue-glow: rgba(59, 130, 246, 0.15);
+    --cyan: #06b6d4;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --purple: #8b5cf6;
+    --rose: #f43f5e;
+    --orange: #f97316;
+    --bronze: #cd7f32;
+    --silver-c: #c0c0c0;
+    --gold-c: #ffd700;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    padding: 40px 32px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 48px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    padding-left: 16px;
+    border-left: 3px solid var(--blue);
+    color: var(--text);
+  }
+
+  .section-title span {
+    color: var(--text-dim);
+    font-weight: 400;
+    font-size: 13px;
+    margin-left: 8px;
+  }
+
+  /* ── Pipeline Diagram ── */
+  .pipeline-container {
+    margin-bottom: 56px;
+  }
+
+  .pipeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    padding: 32px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow-x: auto;
+  }
+
+  .pipeline-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px;
+    min-width: 130px;
+    position: relative;
+  }
+
+  .node-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    position: relative;
+    transition: transform 0.2s;
+  }
+
+  .node-icon:hover {
+    transform: scale(1.1);
+  }
+
+  .node-icon.source { background: linear-gradient(135deg, #1e3a5f, #0c4a6e); border: 1px solid #0ea5e9; color: #38bdf8; }
+  .node-icon.eventhub { background: linear-gradient(135deg, #3b1f6e, #4c1d95); border: 1px solid var(--purple); color: #a78bfa; }
+  .node-icon.bronze { background: linear-gradient(135deg, #422006, #78350f); border: 1px solid var(--bronze); color: var(--bronze); }
+  .node-icon.silver { background: linear-gradient(135deg, #1f2937, #374151); border: 1px solid var(--silver-c); color: var(--silver-c); }
+  .node-icon.gold { background: linear-gradient(135deg, #422006, #713f12); border: 1px solid var(--gold-c); color: var(--gold-c); }
+  .node-icon.synapse { background: linear-gradient(135deg, #0c4a6e, #164e63); border: 1px solid var(--cyan); color: var(--cyan); }
+  .node-icon.powerbi { background: linear-gradient(135deg, #4a1942, #6b1d5e); border: 1px solid #e879a8; color: #f0abfc; }
+  .node-icon.adf { background: linear-gradient(135deg, #14532d, #166534); border: 1px solid var(--green); color: var(--green); }
+
+  .node-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .node-sublabel {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    text-align: center;
+  }
+
+  .arrow {
+    font-size: 20px;
+    color: var(--text-dim);
+    margin: 0 -4px;
+    flex-shrink: 0;
+  }
+
+  .adf-wrapper {
+    border: 2px dashed var(--green);
+    border-radius: 16px;
+    padding: 12px 8px 8px;
+    margin-top: 8px;
+    position: relative;
+  }
+
+  .adf-label {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    padding: 0 12px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+
+  /* ── Star Schema ── */
+  .schema-section {
+    margin-bottom: 56px;
+  }
+
+  .star-schema {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 20px;
+    padding: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .dim-table, .fact-table {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .table-header {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .table-header .badge {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .dim-table .table-header { background: linear-gradient(135deg, #1e3a5f, #0c4a6e); color: #7dd3fc; }
+  .dim-table .table-header .badge { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+  .fact-table .table-header { background: linear-gradient(135deg, #713f12, #92400e); color: var(--gold-c); }
+  .fact-table .table-header .badge { background: rgba(255, 215, 0, 0.2); color: var(--gold-c); }
+
+  .table-body {
+    background: var(--surface2);
+    padding: 8px 0;
+  }
+
+  .table-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 16px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    gap: 12px;
+  }
+
+  .table-row:hover {
+    background: rgba(59, 130, 246, 0.05);
+  }
+
+  .col-name { color: var(--text); }
+  .col-type { color: var(--text-dim); font-size: 11px; }
+  .col-key { color: var(--amber); }
+  .col-fk { color: var(--cyan); }
+
+  /* Grid placement */
+  .dim-patient { grid-column: 1; grid-row: 1; }
+  .dim-department { grid-column: 3; grid-row: 1; }
+  .fact-flow { grid-column: 2; grid-row: 1 / 4; }
+  .dim-date { grid-column: 1; grid-row: 2; }
+
+  /* Connection lines (simplified with pseudo-elements) */
+  .fact-flow {
+    position: relative;
+  }
+
+  /* ── Dataset Cards ── */
+  .datasets-section {
+    margin-bottom: 56px;
+  }
+
+  .dataset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .dataset-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .dataset-card:hover {
+    border-color: var(--blue);
+  }
+
+  .dataset-card-header {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dataset-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .dataset-card:nth-child(1) .dataset-num { background: var(--blue-glow); color: var(--blue); border: 1px solid var(--blue); }
+  .dataset-card:nth-child(2) .dataset-num { background: rgba(139, 92, 246, 0.15); color: var(--purple); border: 1px solid var(--purple); }
+  .dataset-card:nth-child(3) .dataset-num { background: rgba(6, 182, 212, 0.15); color: var(--cyan); border: 1px solid var(--cyan); }
+  .dataset-card:nth-child(4) .dataset-num { background: rgba(16, 185, 129, 0.15); color: var(--green); border: 1px solid var(--green); }
+
+  .dataset-card-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .dataset-card-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .dataset-card-body {
+    padding: 16px;
+  }
+
+  .config-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(42, 53, 80, 0.5);
+  }
+
+  .config-row:last-child { border: none; }
+
+  .config-key {
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .config-value {
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    text-align: right;
+    word-break: break-all;
+    max-width: 60%;
+  }
+
+  /* ── ADF Pipeline Detail ── */
+  .adf-detail {
+    margin-bottom: 56px;
+  }
+
+  .adf-pipelines {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .adf-pipe-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .adf-pipe-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .adf-pipe-card:nth-child(1)::before { background: var(--blue); }
+  .adf-pipe-card:nth-child(2)::before { background: var(--amber); }
+  .adf-pipe-card:nth-child(3)::before { background: var(--green); }
+
+  .adf-pipe-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .adf-pipe-trigger {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 16px;
+  }
+
+  .adf-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .adf-step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .adf-step-text {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .adf-step-text code {
+    background: var(--surface2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan);
+  }
+
+  .connector {
+    width: 1px;
+    height: 12px;
+    background: var(--border);
+    margin-left: 11px;
+  }
+
+  /* Responsive */
+  @media (max-width: 800px) {
+    .star-schema {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+    }
+    .dim-patient, .dim-department, .fact-flow, .dim-date {
+      grid-column: 1;
+      grid-row: auto;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>Healthcare Analytics — Azure Data Platform</h1>
+<p class="subtitle">End-to-End Pipeline Architecture · ADF Orchestration · Star Schema</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PIPELINE ARCHITECTURE -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="pipeline-container">
+  <div class="section-title">1. End-to-End Pipeline Architecture <span>Data flow from simulator to dashboard</span></div>
+  <div class="pipeline">
+    <div class="pipeline-node">
+      <div class="node-icon source">🏥</div>
+      <div class="node-label">Patient Flow<br>Simulator</div>
+      <div class="node-sublabel">Python / Local</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="pipeline-node">
+      <div class="node-icon eventhub">⚡</div>
+      <div class="node-label">Azure<br>Event Hub</div>
+      <div class="node-sublabel">Kafka Protocol</div>
+    </div>
+    <div class="arrow">→</div>
+
+    <div style="position: relative;">
+      <div class="adf-wrapper">
+        <div class="adf-label">🔄 ORCHESTRATED BY AZURE DATA FACTORY</div>
+        <div style="display: flex; align-items: center; gap: 0;">
+          <div class="pipeline-node">
+            <div class="node-icon bronze">B</div>
+            <div class="node-label">Bronze</div>
+            <div class="node-sublabel">Raw JSON</div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="pipeline-node">
+            <div class="node-icon silver">S</div>
+            <div class="node-label">Silver</div>
+            <div class="node-sublabel">Cleaned + DQ</div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="pipeline-node">
+            <div class="node-icon gold">G</div>
+            <div class="node-label">Gold</div>
+            <div class="node-sublabel">Star Schema</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 6px;">
+        <span class="node-sublabel">Azure Databricks + ADLS Gen2</span>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+    <div class="pipeline-node">
+      <div class="node-icon synapse">📊</div>
+      <div class="node-label">Azure<br>Synapse</div>
+      <div class="node-sublabel">Analytics SQL</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="pipeline-node">
+      <div class="node-icon powerbi">📈</div>
+      <div class="node-label">Power BI</div>
+      <div class="node-sublabel">Dashboards</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- STAR SCHEMA -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="schema-section">
+  <div class="section-title">2. Gold Layer — Star Schema <span>Dimension + Fact tables for analytics</span></div>
+  <div class="star-schema">
+
+    <!-- dim_patient -->
+    <div class="dim-table dim-patient">
+      <div class="table-header">
+        dim_patient <span class="badge">SCD Type 2</span>
+      </div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-key">🔑 patient_sk</span><span class="col-type">BIGINT</span></div>
+        <div class="table-row"><span class="col-name">patient_id</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">gender</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">age</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">insurance_type</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">effective_from</span><span class="col-type">TIMESTAMP</span></div>
+        <div class="table-row"><span class="col-name">effective_to</span><span class="col-type">TIMESTAMP</span></div>
+        <div class="table-row"><span class="col-name">is_current</span><span class="col-type">BOOLEAN</span></div>
+      </div>
+    </div>
+
+    <!-- FACT TABLE (center) -->
+    <div class="fact-table fact-flow">
+      <div class="table-header">
+        fact_patient_flow <span class="badge">FACT</span>
+      </div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-key">🔑 fact_id</span><span class="col-type">BIGINT</span></div>
+        <div class="table-row"><span class="col-fk">🔗 patient_sk</span><span class="col-type">BIGINT</span></div>
+        <div class="table-row"><span class="col-fk">🔗 department_sk</span><span class="col-type">BIGINT</span></div>
+        <div class="table-row"><span class="col-fk">🔗 admission_date</span><span class="col-type">DATE</span></div>
+        <div class="table-row"><span class="col-name">event_type</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">event_id</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">patient_id</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">admission_time</span><span class="col-type">TIMESTAMP</span></div>
+        <div class="table-row"><span class="col-name">discharge_time</span><span class="col-type">TIMESTAMP</span></div>
+        <div class="table-row"><span class="col-name">expected_discharge_time</span><span class="col-type">TIMESTAMP</span></div>
+        <div class="table-row"><span class="col-name">length_of_stay_hrs</span><span class="col-type">DOUBLE</span></div>
+        <div class="table-row"><span class="col-name">is_currently_admitted</span><span class="col-type">BOOLEAN</span></div>
+        <div class="table-row"><span class="col-name">admission_priority</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">diagnosis_code</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">discharge_status</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">bed_id</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">heart_rate</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">bp_systolic</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">bp_diastolic</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">temperature_f</span><span class="col-type">DOUBLE</span></div>
+        <div class="table-row"><span class="col-name">oxygen_saturation</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">_gold_processed_at</span><span class="col-type">TIMESTAMP</span></div>
+      </div>
+    </div>
+
+    <!-- dim_department -->
+    <div class="dim-table dim-department">
+      <div class="table-header">
+        dim_department <span class="badge">DIM</span>
+      </div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-key">🔑 department_sk</span><span class="col-type">BIGINT</span></div>
+        <div class="table-row"><span class="col-name">department</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">hospital_id</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">hospital_name</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">bed_capacity</span><span class="col-type">INT</span></div>
+      </div>
+    </div>
+
+    <!-- dim_date -->
+    <div class="dim-table dim-date">
+      <div class="table-header">
+        dim_date <span class="badge">DIM</span>
+      </div>
+      <div class="table-body">
+        <div class="table-row"><span class="col-key">🔑 date_key</span><span class="col-type">DATE</span></div>
+        <div class="table-row"><span class="col-name">year</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">quarter</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">month</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">month_name</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">day</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">day_of_week</span><span class="col-type">INT</span></div>
+        <div class="table-row"><span class="col-name">day_name</span><span class="col-type">STRING</span></div>
+        <div class="table-row"><span class="col-name">is_weekend</span><span class="col-type">BOOLEAN</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ADF DATASETS -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="datasets-section">
+  <div class="section-title">3. ADF Dataset Configuration <span>Create these 4 datasets in Azure Data Factory</span></div>
+  <div class="dataset-grid">
+
+    <div class="dataset-card">
+      <div class="dataset-card-header">
+        <div class="dataset-num">1</div>
+        <div>
+          <div class="dataset-card-title">ds_gold_fact_patient_flow</div>
+          <div class="dataset-card-sub">Fact Table</div>
+        </div>
+      </div>
+      <div class="dataset-card-body">
+        <div class="config-row"><span class="config-key">Format</span><span class="config-value">Parquet</span></div>
+        <div class="config-row"><span class="config-key">Linked Service</span><span class="config-value">healthcarestorage</span></div>
+        <div class="config-row"><span class="config-key">Container</span><span class="config-value">gold</span></div>
+        <div class="config-row"><span class="config-key">File path</span><span class="config-value">gold/fact_patient_flow</span></div>
+        <div class="config-row"><span class="config-key">Schema</span><span class="config-value">From connection/store</span></div>
+      </div>
+    </div>
+
+    <div class="dataset-card">
+      <div class="dataset-card-header">
+        <div class="dataset-num">2</div>
+        <div>
+          <div class="dataset-card-title">ds_gold_dim_patient</div>
+          <div class="dataset-card-sub">Patient Dimension (SCD2)</div>
+        </div>
+      </div>
+      <div class="dataset-card-body">
+        <div class="config-row"><span class="config-key">Format</span><span class="config-value">Parquet</span></div>
+        <div class="config-row"><span class="config-key">Linked Service</span><span class="config-value">healthcarestorage</span></div>
+        <div class="config-row"><span class="config-key">Container</span><span class="config-value">gold</span></div>
+        <div class="config-row"><span class="config-key">File path</span><span class="config-value">gold/dim_patient</span></div>
+        <div class="config-row"><span class="config-key">Schema</span><span class="config-value">From connection/store</span></div>
+      </div>
+    </div>
+
+    <div class="dataset-card">
+      <div class="dataset-card-header">
+        <div class="dataset-num">3</div>
+        <div>
+          <div class="dataset-card-title">ds_gold_dim_department</div>
+          <div class="dataset-card-sub">Department Dimension</div>
+        </div>
+      </div>
+      <div class="dataset-card-body">
+        <div class="config-row"><span class="config-key">Format</span><span class="config-value">Parquet</span></div>
+        <div class="config-row"><span class="config-key">Linked Service</span><span class="config-value">healthcarestorage</span></div>
+        <div class="config-row"><span class="config-key">Container</span><span class="config-value">gold</span></div>
+        <div class="config-row"><span class="config-key">File path</span><span class="config-value">gold/dim_department</span></div>
+        <div class="config-row"><span class="config-key">Schema</span><span class="config-value">From connection/store</span></div>
+      </div>
+    </div>
+
+    <div class="dataset-card">
+      <div class="dataset-card-header">
+        <div class="dataset-num">4</div>
+        <div>
+          <div class="dataset-card-title">ds_gold_dim_date</div>
+          <div class="dataset-card-sub">Date Dimension</div>
+        </div>
+      </div>
+      <div class="dataset-card-body">
+        <div class="config-row"><span class="config-key">Format</span><span class="config-value">Parquet</span></div>
+        <div class="config-row"><span class="config-key">Linked Service</span><span class="config-value">healthcarestorage</span></div>
+        <div class="config-row"><span class="config-key">Container</span><span class="config-value">gold</span></div>
+        <div class="config-row"><span class="config-key">File path</span><span class="config-value">gold/dim_date</span></div>
+        <div class="config-row"><span class="config-key">Schema</span><span class="config-value">From connection/store</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ADF PIPELINE DETAIL -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="adf-detail">
+  <div class="section-title">4. ADF Pipeline Design <span>3 pipelines to orchestrate the medallion flow</span></div>
+  <div class="adf-pipelines">
+
+    <div class="adf-pipe-card">
+      <div class="adf-pipe-name">PL_Bronze_Ingestion</div>
+      <div class="adf-pipe-trigger">Trigger: Event-based (Event Hub activity)</div>
+      <div class="adf-step">
+        <div class="adf-step-num">1</div>
+        <div class="adf-step-text">Run Databricks Notebook<br><code>01_bronze_ingestion</code></div>
+      </div>
+      <div class="connector"></div>
+      <div class="adf-step">
+        <div class="adf-step-num">2</div>
+        <div class="adf-step-text">Stream from Event Hub → Bronze Delta in <code>ADLS/bronze/patient_flow</code></div>
+      </div>
+      <div class="connector"></div>
+      <div class="adf-step">
+        <div class="adf-step-num">3</div>
+        <div class="adf-step-text">On failure → Send alert via <code>Logic App / Email</code></div>
+      </div>
+    </div>
+
+    <div class="adf-pipe-card">
+      <div class="adf-pipe-name">PL_Silver_Transform</div>
+      <div class="adf-pipe-trigger">Trigger: On success of PL_Bronze_Ingestion</div>
+      <div class="adf-step">
+        <div class="adf-step-num">1</div>
+        <div class="adf-step-text">Run Databricks Notebook<br><code>02_silver_data_cleaning</code></div>
+      </div>
+      <div class="connector"></div>
+      <div class="adf-step">
+        <div class="adf-step-num">2</div>
+        <div class="adf-step-text">Parse JSON, apply 7 DQ rules, deduplicate, write to <code>ADLS/silver/patient_flow</code></div>
+      </div>
+      <div class="connector"></div>
+      <div class="adf-step">
+        <div class="adf-step-num">3</div>
+        <div class="adf-step-text">On failure → Send alert + log to <code>quarantine</code> path</div>
+      </div>
+    </div>
+
+    <div class="adf-pipe-card">
+      <div class="adf-pipe-name">PL_Gold_Publish</div>
+      <div class="adf-pipe-trigger">Trigger: On success of PL_Silver_Transform</div>
+      <div class="adf-step">
+        <div class="adf-step-num">1</div>
+        <div class="adf-step-text">Run Databricks Notebook<br><code>03_gold_data_transform</code></div>
+      </div>
+      <div class="connector"></div>
+      <div class="adf-step">
+        <div class="adf-step-num">2</div>
+        <div class="adf-step-text">Build Star Schema: <code>dim_patient</code> (SCD2), <code>dim_department</code>, <code>dim_date</code>, <code>fact_patient_flow</code></div>
+      </div>
+      <div class="connector"></div>
+      <div class="adf-step">
+        <div class="adf-step-num">3</div>
+        <div class="adf-step-text">Refresh Power BI dataset via <code>Synapse Serverless SQL</code></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
